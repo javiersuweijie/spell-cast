@@ -25,25 +25,27 @@ public class GameServer {
 	    	Socket newSocket = serverSocket.accept();
 			sockets.add(newSocket);	    		
 			System.out.println(sockets.size() + " client connected."); 
-			newSocket.setSoTimeout(100);
+			newSocket.setSoTimeout(500);
 	    }
 	    GameRoomHandler g = new GameRoomHandler(sockets);
 	    g.start();
-	    g.wait();
+	    g.join();
 	}
 }
 
 class GameRoomHandler extends Thread{
 	private boolean active = true;
-	private Socket[] clients = new Socket[2];
+	private Socket[] clients;
     private BufferedReader[] inChannels = new BufferedReader[2];
     private PrintWriter[] outChannels = new PrintWriter[2];
 	
 	public GameRoomHandler(List<Socket> sockets) throws Exception {
-		this.clients = (Socket[]) sockets.toArray();
+		System.out.println("Gameroom created");
+		this.clients =  (sockets.toArray(new Socket[2]));
 		for (int i=0;i<clients.length;i++) {
 			inChannels[i] = new BufferedReader(new InputStreamReader(clients[i].getInputStream()));
 			outChannels[i] = new PrintWriter(clients[i].getOutputStream(), true);
+			System.out.println("Sending message to client: "+i);
 			outChannels[i].println("You are connected");
 		}
 	}
@@ -60,8 +62,9 @@ class GameRoomHandler extends Thread{
 	
 	public void run(){
 		while (active) {
-			try {
-				for (int i=0;i<clients.length;i++) {
+			for (int i=0;i<clients.length;i++) {
+				try {
+					System.out.println("Listening to client: "+i);
 					if (clients[i].isClosed()) endGame(i);
 					String message = inChannels[i].readLine();				
 					if (message!=null) {
@@ -71,9 +74,8 @@ class GameRoomHandler extends Thread{
 						sendClients(update);
 					}
 				}	
-			} catch (SocketTimeoutException e) {
-				continue;
-			} catch (IOException e) {
+				catch (SocketTimeoutException e) {} 
+				catch (IOException e) {}
 			}
 		}
 	}
