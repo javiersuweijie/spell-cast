@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.ListIterator;
 
 public class GameClient {
 	
@@ -47,7 +48,8 @@ class PlayerHandler extends Thread{
 					if (ClientM.parsePlayerInput(temp)){
 						ClientM.inputList(temp, GameClient.TileBuffer);
 					} else if(temp.equals("SEND")) {
-						ClientM.inputOut(GameClient.TileBuffer, GameClient.clientOut);
+						if (!GameClient.TileBuffer.isEmpty()) ClientM.inputOut(GameClient.TileBuffer, GameClient.clientOut);
+						else System.out.println("No moves to send!");
 					} else {
 						System.out.println("Erroneous Entry. Format Expected: Xpos,Ypos / SEND");
 					}
@@ -117,9 +119,10 @@ class ClientM{
 	static void inputOut(ArrayList<String> list, PrintWriter out){
 		
 		String temp = null;
-		for (String s : list){
-			temp = temp + s + " ";
-			list.remove(s);
+		ListIterator<String> li = list.listIterator();
+		while(li.hasNext()){
+			temp = temp + li.next() + " ";
+			li.remove();
 		}
 		temp = temp.trim();
 		out.println(temp);
