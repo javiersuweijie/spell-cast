@@ -118,7 +118,7 @@ class ClientM{
 	
 	static void inputOut(ArrayList<String> list, PrintWriter out){
 		
-		String temp = null;
+		String temp = "";
 		ListIterator<String> li = list.listIterator();
 		while(li.hasNext()){
 			temp = temp + li.next() + " ";
