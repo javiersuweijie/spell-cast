@@ -1,7 +1,7 @@
 package game;
 
 public class Board {
-	public static final int dimensions = 10;
+	public static final int dimensions = 6;
 	public static final int numberOfTypes = 6;
 	private Tile[][] board;
 	public Board(){

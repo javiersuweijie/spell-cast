@@ -1,5 +1,7 @@
 package server;
 
+import game.*;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,6 +11,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class GameServer {
@@ -38,16 +41,24 @@ class GameRoomHandler extends Thread{
 	private Socket[] clients;
     private BufferedReader[] inChannels = new BufferedReader[2];
     private PrintWriter[] outChannels = new PrintWriter[2];
+    private Board board;
 	
 	public GameRoomHandler(List<Socket> sockets) throws Exception {
 		System.out.println("Gameroom created");
 		this.clients =  (sockets.toArray(new Socket[2]));
+	    board = new Board();
+		
 		for (int i=0;i<clients.length;i++) {
 			inChannels[i] = new BufferedReader(new InputStreamReader(clients[i].getInputStream()));
-			outChannels[i] = new PrintWriter(clients[i].getOutputStream(), true);
-			System.out.println("Sending message to client: "+i);
+			outChannels[i] = new PrintWriter(clients[i].getOutputStream());
 			outChannels[i].println("You are connected");
 		}
+		for (Tile[] sets:board.getBoard()) {
+			sendClients(Arrays.toString(sets));
+			System.out.println(Arrays.toString(sets));
+		}
+		flush();
+		
 	}
 	
 	private void sendClients(String message) {
@@ -56,22 +67,45 @@ class GameRoomHandler extends Thread{
 		}
 	}
 	
+	private void flush() {
+		for (int i=0;i<clients.length;i++) {
+			outChannels[i].flush();
+		}
+	}
+	
 	private void endGame(int loser) {
 		return; //send some info to the winner
+	}
+	
+	private int[][] parseMessage(String message) {
+		System.out.println("Message from client: "+message);
+		int[][] output = new int[2][10];
+		String[] messageArray = message.split(" ");
+		System.out.println(Arrays.toString(messageArray));
+		int count = 0;
+		for (String coord:messageArray) {
+			String[] splitted_coord = coord.split(",");
+			output[0][count] = Integer.valueOf(splitted_coord[0]);
+			output[1][count] = Integer.valueOf(splitted_coord[1]);
+			count++;
+		}
+		return output;
 	}
 	
 	public void run(){
 		while (active) {
 			for (int i=0;i<clients.length;i++) {
 				try {
-					System.out.println("Listening to client: "+i);
+					//System.out.println("Listening to client: "+i);
 					if (clients[i].isClosed()) endGame(i);
 					String message = inChannels[i].readLine();				
 					if (message!=null) {
-						String[] messageArray = message.split(" ");
-						System.out.println(messageArray);
-						String update = null;//Call board.destroyTile
-						sendClients(update);
+						int[][] set = parseMessage(message);
+						board.deleteTile(set);
+						for (Tile[] sets:board.getBoard()) {
+							sendClients(Arrays.toString(sets));
+						}
+						flush();
 					}
 				}	
 				catch (SocketTimeoutException e) {} 

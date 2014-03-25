@@ -83,6 +83,7 @@ class ServerListener extends Thread{
 				try {
 					if (serverIn.ready()){
 						temp = serverIn.readLine();
+						System.out.println(temp);
 					}
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
@@ -102,7 +103,7 @@ class ClientM{
 	
 	static boolean parsePlayerInput(String s){
 		
-		if (s.matches("\\s*[1-8]\\s*,\\s*[1-8]\\s*")) return true;
+		if (s.matches("\\s*[0-5]\\s*,\\s*[0-5]\\s*")) return true;
 		return false;
 	}
 	
